@@ -3,49 +3,54 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Users can only read/write their own profile
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      
-      // Nested collections in user profile
+    // Helper: Get UID from username
+    function getUidForUsername(username) {
+      return get(/databases/$(database)/documents/usernames/$(username)).data.uid;
+    }
+
+    // Username directory (Claiming a username)
+    match /usernames/{username} {
+      allow read: if request.auth != null;
+      // Allow creation if it doesn't exist and user stores their own UID
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+    }
+
+    // UID -> Username mapping (Private to the user)
+    match /directories/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // User data (Inbox, Sent, Profile, Keys)
+    // Keyed by USERNAME
+    match /users/{username} {
+      // Allow read/write if the user's UID matches the one linked to this username
+      allow read, write: if request.auth != null && request.auth.uid == getUidForUsername(username);
+
       match /profile/{document=**} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        allow read, write: if request.auth != null && request.auth.uid == getUidForUsername(username);
       }
       
       match /keys/{document=**} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        allow read, write: if request.auth != null && request.auth.uid == getUidForUsername(username);
       }
 
-      // Mail folders
       match /inbox/{messageId} {
-        allow read, update, delete: if request.auth != null && request.auth.uid == userId;
-        // Allow anyone to send to this inbox
+        allow read, update, delete: if request.auth != null && request.auth.uid == getUidForUsername(username);
+        // Allow any authenticated user to send an email (create in inbox)
         allow create: if request.auth != null;
       }
       
       match /sent/{messageId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        allow read, write: if request.auth != null && request.auth.uid == getUidForUsername(username);
       }
       
       match /trash/{messageId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        allow read, write: if request.auth != null && request.auth.uid == getUidForUsername(username);
       }
       
       match /drafts/{messageId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        allow read, write: if request.auth != null && request.auth.uid == getUidForUsername(username);
       }
-    }
-
-    // Username directory (for lookup)
-    match /usernames/{username} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-    }
-
-    // Directories (UID -> username)
-    match /directories/{uid} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && request.auth.uid == uid;
     }
 
     // Deny everything else

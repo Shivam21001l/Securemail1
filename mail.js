@@ -414,8 +414,19 @@ const Mail = (() => {
 
     async function readEmail(session, email, folder) {
         const wrappedKey = folder === 'sent' ? email.wrappedKeyForSender : email.wrappedKeyForRecipient;
-        const sessionKey = await Crypto.unwrapAESKey(wrappedKey, session.rsaPriv);
-        const body = await Crypto.aesDecrypt(email.encryptedBody, sessionKey);
+        
+        let body;
+        if (email.encVersion === 2) {
+            const sessionKey = await Crypto.unwrapAESKey(wrappedKey, session.rsaPriv);
+            body = await Crypto.aesDecrypt(email.encryptedBody, sessionKey);
+        } else {
+            // Legacy v1 3DES fallback for old data recovery
+            const { TripleDES, RSA } = window.SecureCrypto;
+            // Note: RSA.decryptKey and TripleDES.decrypt are from the legacy crypto.js
+            const desKey = await RSA.decryptKey(wrappedKey || email.encryptedDesKeyForRecipient, session.rsaPriv);
+            body = TripleDES.decrypt(email.encryptedBody, desKey);
+        }
+
         const verified = await Crypto.verifyData(body, email.signature, email.senderSigPub);
         // Mark as read
         const ref = doc(db, `users/${session.username}/${folder}`, email.id);
@@ -475,9 +486,30 @@ const Mail = (() => {
     }
 
     async function restoreSession() {
-        // High Security: returns _sessionKeys only if they exist in memory.
-        // On page reload, this is null, forcing re-login to re-decrypt keys.
-        return _sessionKeys;
+        if (_sessionKeys) return _sessionKeys;
+
+        // Try to restore from Firebase Auth state
+        return new Promise((resolve) => {
+            const unsubscribe = auth.onAuthStateChanged(async (user) => {
+                unsubscribe();
+                if (user) {
+                    try {
+                        const dirSnap = await getDoc(doc(db, 'directories', user.uid));
+                        if (dirSnap.exists()) {
+                            await setupSession(user, dirSnap.data().username);
+                            resolve(_sessionKeys);
+                        } else {
+                            resolve(null);
+                        }
+                    } catch (e) {
+                        console.error("Auto-restore failed:", e);
+                        resolve(null);
+                    }
+                } else {
+                    resolve(null);
+                }
+            });
+        });
     }
 
     function logout() {

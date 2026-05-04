@@ -5,6 +5,11 @@
 
 import { Mail } from './mail.js';
 
+// Auto-redirect if already signed in
+Mail.restoreSession().then(session => {
+    if (session) window.location.href = 'index.html';
+});
+
 const RATE_LIMIT_ATTEMPTS = 5;
 const RATE_LIMIT_DURATION_MS = 30000;
 let failedAttempts = 0;

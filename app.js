@@ -122,17 +122,33 @@ function makeAv(str, size = 36) {
 }
 
 // ─── Toast ───────────────────────────────────────────────────────────────────
+    // Initialize icons in the new elements
+    if (window.lucide) lucide.createIcons();
+}
+
+/** Modern Toast Component */
 function toast(msg, type = 'info', duration = 3500) {
+    const container = $('toast-container') || document.body;
     const el = document.createElement('div');
-    el.className = 'toast' + (type === 'error' ? ' toast-error' : type === 'success' ? ' toast-success' : '');
-    el.textContent = msg;
-    $('toast-container').appendChild(el);
+    el.className = `toast toast-${type}`;
+    
+    const iconName = type === 'error' ? 'alert-circle' : type === 'success' ? 'check-circle' : 'info';
+    el.innerHTML = `
+        <i data-lucide="${iconName}" class="toast-icon"></i>
+        <div class="toast-body">${msg}</div>
+        <button class="toast-close">&times;</button>
+    `;
+
+    container.appendChild(el);
     requestAnimationFrame(() => el.classList.add('toast-show'));
-    setTimeout(() => {
+
+    const dismiss = () => {
         el.classList.remove('toast-show');
         setTimeout(() => el.remove(), 300);
-    }, duration);
-    // Initialize icons in the new elements
+    };
+
+    el.querySelector('.toast-close').onclick = dismiss;
+    setTimeout(dismiss, duration);
     if (window.lucide) lucide.createIcons();
 }
 
