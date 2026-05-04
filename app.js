@@ -13,6 +13,23 @@ import {
     getRolePresets
 } from './classify.js';
 
+// ─── Security Enforcement ──────────────────────────────────────────────────
+const TRUSTED_PROJECT_ID = 'mail-de6a5'; 
+
+function assertConfigIntegrity() {
+    const projectId = window.CONFIG?.firebase?.projectId;
+    if (projectId !== TRUSTED_PROJECT_ID) {
+        document.body.innerHTML = `
+            <div style="height:100vh;display:flex;align-items:center;justify-content:center;background:#0a0a0c;color:#fff;font-family:sans-serif;text-align:center;padding:20px;">
+                <div>
+                    <h1 style="color:#ef4444;">Security Alert</h1>
+                    <p>Application configuration mismatch detected. Access denied for security reasons.</p>
+                </div>
+            </div>`;
+        throw new Error("Config integrity check failed.");
+    }
+}
+
 // ─── Session + State ─────────────────────────────────────────────────────────
 let session = null;
 let currentFolder = 'inbox';
@@ -184,6 +201,7 @@ function lockSession() {
 
 // ─── Auth Helpers ────────────────────────────────────────────────────────────
 async function renderAuth() {
+    assertConfigIntegrity();
     session = await Mail.restoreSession();
     if (!session) {
         window.location.href = 'login.html';

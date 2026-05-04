@@ -14,6 +14,9 @@ window.CONFIG = {
     appId: "YOUR_APP_ID",
     measurementId: "YOUR_MEASUREMENT_ID"
   },
+  appCheck: {
+    recaptchaSiteKey: "YOUR_RECAPTCHA_V3_SITE_KEY"
+  },
   indexNow: {
     key: "YOUR_INDEXNOW_KEY",
     url: "YOUR_SITE_URL"
