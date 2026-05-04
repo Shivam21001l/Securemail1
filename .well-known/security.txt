@@ -1,0 +1,8 @@
+# SecureMail Security Policy
+# https://securitytxt.org/ (RFC 9116)
+
+Contact: mailto:security@mail-de6a5.web.app
+Expires: 2027-04-24T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://mail-de6a5.web.app/.well-known/security.txt
+Policy: https://mail-de6a5.web.app/.well-known/security.txt

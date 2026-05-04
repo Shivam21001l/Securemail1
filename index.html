@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SecureMail — Personal Encrypted Workspace</title>
+  <meta name="description" content="SecureMail: A light, neumorphic end-to-end encrypted mail platform using AES-256-GCM and RSA-2048." />
+  <meta name="google-site-verification" content="LDnIi0XNkDWWljWe4tAABC_TRxD-rPZOcNZgAhSSkwU" />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  
+  <link rel="stylesheet" href="design-system.css" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="config.js"></script>
+  <script src="lucide.min.js"></script>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       APP SCREEN — Three-column layout
+  ════════════════════════════════════════════════════════════════ -->
+  <div class="app-screen" id="app-screen">
+
+    <!-- COLUMN 1: SIDEBAR -->
+    <aside class="sidebar" id="sidebar" role="navigation" aria-label="Mail folders">
+      <!-- Logo -->
+      <div class="sidebar-brand">
+        <i data-lucide="shield-check" style="color:var(--g-blue); width:20px; height:20px;"></i>
+        <span class="sidebar-brand-name">SecureMail</span>
+        <button class="icon-btn sidebar-close-btn" id="sidebar-close-btn" aria-label="Close menu" title="Close" style="margin-left:auto; display:none;">
+          <i data-lucide="x" style="width:18px; height:18px;"></i>
+        </button>
+      </div>
+
+      <!-- Compose button -->
+      <button class="compose-btn" id="compose-btn" aria-label="Compose new email" title="Compose">
+        <i data-lucide="plus" style="width:20px; height:20px; color:var(--g-red);"></i>
+        Compose
+      </button>
+
+      <!-- Search -->
+      <div class="sidebar-search">
+        <i data-lucide="search" style="width:14px; height:14px;"></i>
+        <input id="search-input" type="search" class="sidebar-search-input" placeholder="Search mail…" aria-label="Search mail" />
+      </div>
+
+      <!-- Folder nav -->
+      <nav class="folder-nav" role="menu" aria-label="Folders">
+        <button class="folder-btn folder-active" data-folder="inbox" aria-label="Inbox" role="menuitem">
+          <i data-lucide="inbox" class="folder-icon"></i>
+          <span class="folder-label">Inbox</span>
+          <span class="folder-badge" id="inbox-badge" style="display:none"></span>
+        </button>
+        <button class="folder-btn" data-folder="starred" aria-label="Starred" role="menuitem">
+          <i data-lucide="star" class="folder-icon"></i>
+          <span class="folder-label">Starred</span>
+        </button>
+        <button class="folder-btn" data-folder="sent" aria-label="Sent" role="menuitem">
+          <i data-lucide="send" class="folder-icon"></i>
+          <span class="folder-label">Sent</span>
+        </button>
+        <button class="folder-btn" data-folder="drafts" aria-label="Drafts" role="menuitem">
+          <i data-lucide="file-text" class="folder-icon"></i>
+          <span class="folder-label">Drafts</span>
+        </button>
+        <button class="folder-btn" data-folder="trash" aria-label="Trash" role="menuitem">
+          <i data-lucide="trash-2" class="folder-icon"></i>
+          <span class="folder-label">Trash</span>
+        </button>
+      </nav>
+
+      <!-- Security section -->
+      <div class="sidebar-section-label">Privacy</div>
+      <button class="folder-btn" id="keys-btn" aria-label="PKI Key Manager" role="menuitem">
+        <i data-lucide="key-round" class="folder-icon"></i>
+        <span class="folder-label">Key Manager</span>
+      </button>
+
+      <!-- Security panel -->
+      <div class="security-panel">
+        <div class="security-panel-header">
+          <span class="sec-pulse-dot"></span>
+          SECURE SESSION
+        </div>
+        <div style="font-size:11px; color:var(--text-secondary); opacity:0.8;">AES-256 · RSA-OAEP · RSA-PSS</div>
+      </div>
+
+      <!-- User pill + Sign out -->
+      <div class="sidebar-footer">
+        <div class="sidebar-user-pill" id="user-pill-btn" role="button" tabindex="0" aria-label="User menu" aria-haspopup="true">
+          <div id="user-avatar-topbar"></div>
+          <span id="sidebar-username" class="sidebar-username"></span>
+          <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>
+        </div>
+      </div>
+    </aside>
+
+    <!-- SIDEBAR OVERLAY (mobile backdrop) -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+    <!-- COLUMN 2: EMAIL LIST -->
+    <div class="email-list-col" id="mail-list-pane">
+      <div class="list-header">
+        <button class="icon-btn hamburger-btn" id="hamburger-btn" aria-label="Open navigation menu" title="Menu">
+          <i data-lucide="menu" style="width:18px; height:18px;"></i>
+        </button>
+        <h2 class="folder-title" id="folder-title">Inbox</h2>
+        <button class="icon-btn" id="refresh-btn" aria-label="Refresh inbox" title="Refresh">
+          <i data-lucide="refresh-cw" style="width:15px; height:15px;"></i>
+        </button>
+      </div>
+
+      <!-- Section tab bar -->
+      <div class="tab-row-wrap">
+        <div class="tab-bar" id="section-tabs" role="tablist" aria-label="Inbox sections"></div>
+        <button class="new-section-pin-btn" id="new-section-btn" title="Create a custom section" aria-label="Add new section">
+          <i data-lucide="plus" style="width:13px; height:13px;"></i>
+          Add Section
+        </button>
+      </div>
+
+      <!-- Quick filter bar -->
+      <div class="filter-bar" id="filter-bar">
+        <button class="filter-pill" data-filter="unread">Unread</button>
+        <button class="filter-pill" data-filter="starred">Starred</button>
+        <button class="filter-pill" data-filter="week">This week</button>
+        <button class="filter-pill" data-filter="encrypted">Encrypted</button>
+        <input id="filter-search" class="filter-search" type="search" placeholder="Search in section…" aria-label="Search in section" />
+      </div>
+
+      <div id="mail-list" class="mail-list"></div>
+
+      <!-- FAB for mobile -->
+      <button class="fab-compose" id="fab-compose" aria-label="Compose new email" title="Compose">
+        <i data-lucide="plus" style="width:24px; height:24px;"></i>
+      </button>
+    </div>
+
+    <!-- COLUMN 3: EMAIL CONTENT -->
+    <div class="email-content-col" id="mail-detail-pane" style="display:none">
+      <div class="detail-toolbar">
+        <button class="icon-btn detail-back" id="detail-back-btn" aria-label="Back to list" title="Back">
+          <i data-lucide="chevron-left"></i>
+        </button>
+        <div class="detail-actions">
+          <button class="icon-btn" id="detail-reply-btn" aria-label="Reply" title="Reply">
+            <i data-lucide="reply"></i>
+          </button>
+          <button class="icon-btn" id="detail-star-btn" aria-label="Star email" title="Star">
+            <i data-lucide="star"></i>
+          </button>
+          <button class="icon-btn danger-btn" id="detail-trash-btn" aria-label="Move to trash" title="Move to Trash">
+            <i data-lucide="trash-2"></i>
+          </button>
+        </div>
+      </div>
+      <div id="mail-detail-content" class="mail-detail-content"></div>
+    </div>
+
+    <!-- Email content empty state -->
+    <div class="content-empty-state" id="content-empty-state">
+      <div class="empty-shield">
+        <i data-lucide="shield" style="width:72px; height:72px; color:var(--g-blue); opacity:0.2;"></i>
+      </div>
+      <p class="empty-title">Select a message</p>
+      <p class="empty-sub">Your messages are end-to-end encrypted</p>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       COMPOSE — Slide-up panel
+  ════════════════════════════════════════════════════════════════ -->
+  <div id="compose-modal" class="compose-panel" style="display:none" role="dialog" aria-modal="true" aria-label="Compose new message">
+    <div class="compose-header">
+      <span class="compose-title">
+        <i data-lucide="pen-square" style="width:14px;height:14px;"></i>
+        New Message
+      </span>
+      <div class="compose-header-btns">
+        <button class="compose-hdr-btn" id="compose-minimize" aria-label="Minimize" title="Minimize">
+          <i data-lucide="minus"></i>
+        </button>
+        <button class="compose-hdr-btn compose-close-btn" id="compose-close" aria-label="Close compose" title="Close">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+    </div>
+    <div class="compose-body">
+      <div class="compose-field">
+        <label class="compose-label" for="compose-to">TO</label>
+        <input id="compose-to" type="text" class="compose-input" placeholder="username" aria-label="Recipient username" />
+      </div>
+      <div class="compose-field compose-field-sep">
+        <label class="compose-label" for="compose-subject">SUBJ</label>
+        <input id="compose-subject" type="text" class="compose-input" placeholder="Message subject…" aria-label="Email subject" />
+      </div>
+      <textarea id="compose-body" class="compose-textarea" placeholder="Compose your encrypted message…" aria-label="Message body"></textarea>
+    </div>
+    <div class="compose-footer">
+      <button class="btn-send" id="send-btn" aria-label="Send encrypted message">
+        <i data-lucide="lock" style="width:13px;height:13px;"></i>
+        Send Encrypted
+      </button>
+      <button class="btn-draft" id="save-draft-btn" aria-label="Save as draft">Save Draft</button>
+      <div class="compose-crypto-badges">
+        <span class="compose-badge">[AES]</span>
+        <span class="compose-badge">[RSA-OAEP]</span>
+        <span class="compose-badge">[RSA-PSS]</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       KEYS MODAL
+  ════════════════════════════════════════════════════════════════ -->
+  <div id="keys-modal" class="modal-overlay" style="display:none" role="dialog" aria-modal="true" aria-label="PKI Key Manager">
+    <div class="keys-modal-card">
+      <div class="keys-modal-header">
+        <div class="keys-modal-title">
+          <i data-lucide="key-round" style="width:18px;height:18px;color:var(--g-yellow);"></i>
+          PKI Key Manager
+        </div>
+        <button class="icon-btn" id="keys-modal-close-btn" aria-label="Close">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="modal-body" id="keys-modal-body"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       USER DROPDOWN MENU
+  ════════════════════════════════════════════════════════════════ -->
+  <div id="user-menu" class="dropdown-menu" style="display:none" role="menu" aria-label="User menu">
+    <div class="dropdown-user-info">
+      <div class="dropdown-avatar" id="dropdown-avatar"></div>
+      <div>
+        <div class="dropdown-name" id="dropdown-name"></div>
+        <div class="dropdown-role">Encrypted Mailbox</div>
+      </div>
+    </div>
+    <hr class="dropdown-divider" />
+    <button class="dropdown-item" id="edit-profile-btn" role="menuitem">
+      <i data-lucide="user-pen" style="width:14px;height:14px;"></i>
+      Edit Profile
+    </button>
+    <button class="dropdown-item" id="logout-menu-btn" role="menuitem">
+      <i data-lucide="log-out" style="width:14px;height:14px;"></i>
+      Sign Out
+    </button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       EDIT PROFILE MODAL
+  ════════════════════════════════════════════════════════════════ -->
+  <div id="profile-modal" class="modal-overlay" style="display:none" role="dialog" aria-modal="true" aria-label="Edit Profile">
+    <div class="new-section-card" style="max-width:360px;">
+      <div class="keys-modal-header">
+        <div class="keys-modal-title">Edit Profile</div>
+        <button class="icon-btn" id="profile-modal-close-btn" aria-label="Close modal">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="modal-body" style="padding:20px;">
+        <form id="profile-form">
+          <div class="auth-field" style="margin-bottom:12px;">
+            <label class="auth-label" for="prof-nickname">Nickname</label>
+            <input id="prof-nickname" type="text" class="input" placeholder="e.g. Satoshi" style="width:100%" />
+          </div>
+          <div class="auth-field" style="margin-bottom:12px;">
+            <label class="auth-label" for="prof-photo">Photo URL (Optional)</label>
+            <input id="prof-photo" type="url" class="input" placeholder="https://..." style="width:100%" />
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+            <div class="auth-field">
+              <label class="auth-label" for="prof-gender">Gender</label>
+              <select id="prof-gender" class="input" style="width:100%">
+                <option value="">Choose...</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="auth-field">
+              <label class="auth-label" for="prof-age">Age</label>
+              <input id="prof-age" type="number" min="1" max="150" class="input" placeholder="Age" style="width:100%" />
+            </div>
+          </div>
+          <div class="auth-field" style="margin-bottom:20px;">
+            <label class="auth-label" for="prof-phone">Mobile No.</label>
+            <input id="prof-phone" type="tel" class="input" placeholder="+1..." style="width:100%" />
+          </div>
+          <div style="display:flex; justify-content:flex-end; gap:8px;">
+            <button type="button" class="btn-neu" id="profile-cancel-btn" style="padding:10px 16px; font-size:13px;">Cancel</button>
+            <button type="submit" class="btn-primary" id="save-profile-btn" style="border:none; cursor:pointer; padding:10px 20px; font-size:13px;">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       RIGHT-CLICK CONTEXT MENU
+  ════════════════════════════════════════════════════════════════ -->
+  <div id="ctx-menu" class="ctx-menu" style="display:none" role="menu" aria-label="Email options">
+    <div class="ctx-header" id="ctx-header">Move to section</div>
+    <div id="ctx-section-list"></div>
+    <div class="ctx-divider"></div>
+    <button class="ctx-item ctx-danger" id="ctx-mark-spam" role="menuitem">
+      <i data-lucide="ban" style="width:14px;height:14px;"></i>
+      Mark as Spam
+    </button>
+    <button class="ctx-item" id="ctx-sender-rule" role="menuitem">
+      <i data-lucide="mail-check" style="width:14px;height:14px;"></i>
+      Always classify this sender here
+    </button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       CUSTOM SECTION MODAL
+  ════════════════════════════════════════════════════════════════ -->
+  <div id="new-section-modal" class="modal-overlay" style="display:none" role="dialog" aria-modal="true" aria-label="Create custom section">
+    <div class="new-section-card">
+      <div class="keys-modal-header">
+        <div class="keys-modal-title">
+          <i data-lucide="boxes" style="width:18px;height:18px;color:var(--g-blue);"></i>
+          Create Custom Section
+        </div>
+        <button class="icon-btn" id="close-section-modal" aria-label="Close">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="new-section-body">
+        <div class="new-section-form">
+          <!-- Template picker -->
+          <div class="ns-field">
+            <label class="ns-label">Start from a template <span style="font-weight:400;opacity:.7">(optional)</span></label>
+            <div class="template-grid" id="template-grid"></div>
+          </div>
+          <div class="ns-divider"></div>
+          <div class="ns-field">
+            <label class="ns-label" for="ns-name">Section Name <span class="ns-counter" id="ns-counter">0/32</span></label>
+            <input id="ns-name" type="text" class="field-input" placeholder="e.g. Leave Applications" maxlength="32" aria-label="Section name" />
+            <div class="ns-error" id="ns-name-error" style="display:none">Name required</div>
+          </div>
+          <!-- Color picker -->
+          <div class="ns-field">
+            <label class="ns-label">Section Color</label>
+            <div class="color-picker" id="color-picker">
+              <button class="color-swatch color-swatch-active" data-color="#00c8ff" style="background:#00c8ff" aria-label="Cyan"></button>
+              <button class="color-swatch" data-color="#00ff88" style="background:#00ff88" aria-label="Green"></button>
+              <button class="color-swatch" data-color="#ffb700" style="background:#ffb700" aria-label="Amber"></button>
+              <button class="color-swatch" data-color="#ff4060" style="background:#ff4060" aria-label="Red"></button>
+              <button class="color-swatch" data-color="#a855f7" style="background:#a855f7" aria-label="Purple"></button>
+              <button class="color-swatch" data-color="#f97316" style="background:#f97316" aria-label="Orange"></button>
+              <button class="color-swatch" data-color="#ec4899" style="background:#ec4899" aria-label="Pink"></button>
+              <button class="color-swatch" data-color="#14b8a6" style="background:#14b8a6" aria-label="Teal"></button>
+            </div>
+          </div>
+          <!-- Keywords -->
+          <div class="ns-field">
+            <label class="ns-label" for="ns-kw-input">Auto-classify Keywords <span style="font-weight:400;opacity:.7">(press Enter)</span></label>
+            <div class="pill-input-wrap" id="kw-pills"></div>
+            <input id="ns-kw-input" type="text" class="field-input" placeholder="e.g. leave application, attendance…" aria-label="Add keyword" />
+            <div class="ns-warn" id="ns-kw-warn" style="display:none">Add at least one keyword or sender.</div>
+          </div>
+          <!-- Sender rules -->
+          <details class="ns-collapsible">
+            <summary>Sender Rules <span style="color:var(--text-muted);font-size:11px">(optional)</span></summary>
+            <div class="pill-input-wrap" id="sender-pills" style="margin-top:8px"></div>
+            <input id="ns-sender-input" type="text" class="field-input" placeholder="e.g. @college.ac.in" aria-label="Add sender rule" style="margin-top:6px" />
+          </details>
+          <!-- Actions -->
+          <div class="ns-actions">
+            <button class="btn-primary" id="create-section-btn" style="height:42px;font-size:13px;border:none;cursor:pointer;">Create Section</button>
+            <button class="btn-neu" id="cancel-section-btn" style="height:42px;padding:0 16px;">Cancel</button>
+          </div>
+        </div>
+        <!-- Preview -->
+        <div class="new-section-preview">
+          <div class="ns-preview-label">Preview</div>
+          <div class="ns-tab-preview" id="ns-tab-preview">
+            <span class="ns-preview-dot" id="ns-preview-dot" style="background:#00c8ff"></span>
+            <span id="ns-preview-name">Section Name</span>
+          </div>
+          <div class="ns-row-preview">
+            <div class="ns-preview-bar" id="ns-preview-bar" style="background:#00c8ff"></div>
+            <div class="ns-preview-av">GH</div>
+            <div class="ns-preview-meta">
+              <span class="ns-preview-sender">sender@example.com</span>
+              <span class="ns-preview-time">now</span>
+            </div>
+            <div class="ns-preview-badge" id="ns-preview-badge" style="background:rgba(0,200,255,.12);color:#00c8ff">CUSTOM</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       ROLE SELECTOR MODAL (first login)
+  ════════════════════════════════════════════════════════════════ -->
+  <div id="role-modal" class="modal-overlay" style="display:none" role="dialog" aria-modal="true" aria-label="Choose your role">
+    <div class="role-modal-card">
+      <div class="role-modal-header">
+        <div class="keys-modal-title">
+          <i data-lucide="users" style="width:18px;height:18px;color:var(--g-blue);"></i>
+          Set Up Your Inbox
+        </div>
+      </div>
+      <p class="role-modal-sub">SecureMail will organise your emails into smart sections. Pick your role for the best presets:</p>
+      <div class="role-cards" id="role-cards">
+        <button class="role-card" data-role="student" aria-label="Student">
+          <i data-lucide="graduation-cap" style="width:28px;height:28px;"></i>
+          <span>Student</span>
+        </button>
+        <button class="role-card" data-role="teacher" aria-label="Teacher / Faculty">
+          <i data-lucide="book-open" style="width:28px;height:28px;"></i>
+          <span>Teacher</span>
+        </button>
+        <button class="role-card" data-role="professional" aria-label="Professional">
+          <i data-lucide="briefcase" style="width:28px;height:28px;"></i>
+          <span>Professional</span>
+        </button>
+        <button class="role-card" data-role="other" aria-label="Other">
+          <i data-lucide="circle-help" style="width:28px;height:28px;"></i>
+          <span>Other</span>
+        </button>
+      </div>
+      <button class="role-skip" id="role-skip">Skip — I'll set up sections manually</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       LOADER OVERLAY
+  ════════════════════════════════════════════════════════════════ -->
+  <div id="loader-overlay" class="loader-overlay" style="display:none" role="status" aria-live="polite">
+    <div class="loader-card">
+      <div class="loader-rings" aria-hidden="true">
+        <i data-lucide="loader-2" class="ring-animate" style="width:48px; height:48px; color:var(--g-blue);"></i>
+      </div>
+      <div class="loader-msg" id="loader-msg">Loading…</div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATIONS -->
+  <div id="toast-container" class="toast-container" role="alert" aria-live="assertive" aria-atomic="true"></div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       EXTERNAL SCRIPTS (no inline JS for CSP compliance)
+  ════════════════════════════════════════════════════════════════ -->
+  <script src="ui-helpers.js"></script>
+
+  <!-- Legacy Crypto Dependencies (SRI protected) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"
+          integrity="sha512-E8QSvWZ0eCLGk4km3hxSsNmAWiTb5piKVJXDb65eFUMV8TO+LF3oI7L5RUIu/DVbrVCIZ+HmkwRFoaFnhEJiQ=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="crypto.js"></script>
+
+  <script type="module" src="mail.js"></script>
+  <script src="classify.js" type="module"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
