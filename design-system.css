@@ -93,6 +93,7 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 button:disabled { cursor: not-allowed; opacity: 0.5; }
 ul, ol { list-style: none; }
 img, svg { display: block; max-width: 100%; }
+button svg, a svg { display: inline-block; }
 
 /* ── Focus Ring ───────────────────────────────────────────────── */
 :focus-visible { outline: 2px solid var(--g-blue); outline-offset: 2px; border-radius: 4px; }
