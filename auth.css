@@ -85,9 +85,30 @@ body.auth-screen-register {
   font-family: var(--font-sans);
   font-size: 15px;
   font-weight: 500;
+  transition: all 0.2s ease;
+}
+/* Fix: design-system.css sets svg { display:block } which breaks flex centering */
+#google-login-btn svg,
+#google-register-btn svg {
+  display: inline-block;
+  flex-shrink: 0;
 }
 #google-login-btn:hover { background: #F8F9FA; border-color: #D2E3FC; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
 #google-register-btn:hover { background: #F8F9FA; border-color: #D2E3FC; }
+
+/* ─── Auth Logo Area Fixes ───────────────────────────────────── */
+.auth-logo-area .neu-card {
+  border-radius: var(--radius-lg);
+}
+.auth-logo-area .neu-card svg,
+.auth-logo-area .neu-card i {
+  display: inline-block;
+}
+
+/* ─── Auth Field Spacing ─────────────────────────────────────── */
+.auth-form .auth-field + .auth-field {
+  margin-top: 14px;
+}
 
 /* ─── Loader / Spinner ───────────────────────────────────────── */
 .auth-loader-overlay {
